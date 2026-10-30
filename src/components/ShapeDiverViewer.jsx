@@ -32,6 +32,11 @@ const ShapeDiverViewer = ({My_Ticket, My_Model_View_URL, parameterName}) => {
         modelViewUrl: My_Model_View_URL
         })
 
+
+
+
+
+        
         const interactionEngine = new InteractionEngine(viewport);
 
         const selectManager = new SelectManager()
@@ -55,10 +60,18 @@ const ShapeDiverViewer = ({My_Ticket, My_Model_View_URL, parameterName}) => {
         }
         applyInteractionFlags()
         
-    
+        console.table(
+            Object.values(session.outputs).map(o => ({
+                id: o.id,
+                name: o.name,
+                displayname: o.displayname,
+                hasNode: !!o.node,
+                children: o.node?.children.length
+            }))
+        )
         
 
-        const heightParameter = session.getParameterByName("Total Height (tz)")[0]
+        const heightParameter = session.getParameterByName("Thickness z")[0]
 
         if (!heightParameter) {
             console.warn('Parameter "Total Height (tz)" not found on this model')
@@ -67,12 +80,14 @@ const ShapeDiverViewer = ({My_Ticket, My_Model_View_URL, parameterName}) => {
             setHeightRange({
                 min: Number(heightParameter.min),
                 max: Number(heightParameter.max),
-                step: heightParameter.step || 10
+                step: heightParameter.step || 1
             })
             setHeightValue(Number(heightParameter.value))
         }
 
-        const output = Object.values(session.outputs)[0]
+        
+        const output = session.getOutputByName("boxes")
+        //const output = Object.values(session.outputs)[0]
         if (output){
             output.updateCallback = () => applyInteractionFlags()
         }

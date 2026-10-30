@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import projectsData from "./projectsData";
 import ShapeDiverViewer from "./ShapeDiverViewer";
 import ShapeDiverAppIframe from "./ShapeDiverAppIframe";
-import ShTestViewer from "./ShTestViewer";
+
 
 // project image on home page
 const ProjectThumbnail = ({ project, onClick }) => {
@@ -46,23 +46,6 @@ const ProjectShowcase = ({ project, onClose }) => {
     });
   }
 
-// Add ShapeDiver Viewer model TEST if it exists
-  if (project.shapediverConfigTest) {
-    mediaItems.push({ 
-      type: 'shapediver', 
-      component: (
-        <ShTestViewer
-          My_Model_View_URL={project.shapediverConfigTest.My_Model_View_URL}
-          My_Ticket={project.shapediverConfigTest.My_Ticket}
-          onLoad={() => {
-            console.log('✅ Model loaded successfully'); 
-            setIsLoading(false)
-          }}
-          onSelect={(event) => console.log('User selected:', event)}
-        />
-      )
-    });
-  }
 
   
   if (project.firstImage) {
