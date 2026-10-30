@@ -70,6 +70,7 @@ const ProjectShowcase = ({ project, onClose }) => {
       component: (
         <ShapeDiverAppIframe
         src={project.shapediverApp.My_App_URL}
+        checkout={project.shapediverApp.checkout}
         onLoad={() => setIsLoading(false)}
         />
       )

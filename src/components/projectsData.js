@@ -34,7 +34,8 @@ const projectsData = [
         type: 'shapediver',
         shapediverApp: {
             My_App_URL: "https://appbuilder.shapediver.com/v1/main/latest/?slug=261025-shopify-3",
-            modelName: "260323 HEHE Custom Shelf"
+            modelName: "260323 HEHE Custom Shelf",
+            checkout: true, // "Add to cart" in the App Builder opens Stripe checkout
 
         //shapediverConfig: {
             //My_Model_View_URL: "https://sdr8euc1.eu-central-1.shapediver.com",

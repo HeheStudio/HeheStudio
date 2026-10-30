@@ -10,14 +10,17 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@shapediver/sdk.geometry-api-sdk-v2": "^4.4.0",
     "@shapediver/viewer": "^3.16.10",
     "@shapediver/viewer.features.interaction": "^3.16.10",
     "@tailwindcss/vite": "^4.0.6",
     "emailjs-com": "^3.2.0",
+    "post-robot": "^8.0.32",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "react-hot-toast": "^2.5.2",
-    "react-router-dom": "^6.29.0"
+    "react-router-dom": "^6.29.0",
+    "stripe": "^23.1.0"
   },
   "devDependencies": {
     "@eslint/js": "^9.19.0",
