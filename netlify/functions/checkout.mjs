@@ -1,18 +1,18 @@
 import Stripe from "stripe";
-import {
-  Configuration,
-  ModelStateApi,
-  SessionApi,
-  UtilsApi,
-} from "@shapediver/sdk.geometry-api-sdk-v2";
 
 // Creates a Stripe Checkout for a shelf configured in the ShapeDiver App Builder.
-// The browser only sends the model state id (the saved configuration).
-// The price is recomputed here by ShapeDiver, so it can't be tampered with.
+// The price comes from the App Builder "Add to cart" action in the browser, so it
+// is only checked against MIN_PRICE/MAX_PRICE here. Review each order with the
+// "Check configuration" link saved on the payment before making the shelf.
 
 const PRODUCT_NAME = "HEHE Custom Shelf";
+const CONFIGURATOR_URL =
+  "https://appbuilder.shapediver.com/v1/main/latest/?slug=261025-shopify-3";
 const CURRENCY = "gbp";
 const SHIPPING_COUNTRIES = ["GB"];
+
+const MIN_PRICE = Number(process.env.MIN_PRICE ?? 50);
+const MAX_PRICE = Number(process.env.MAX_PRICE ?? 5000);
 
 const json = (status, body) =>
   new Response(JSON.stringify(body), {
@@ -20,81 +20,31 @@ const json = (status, body) =>
     headers: { "Content-Type": "application/json" },
   });
 
-// Find the price of the App Builder "Add to cart" action inside the AppBuilder output
-const findAddToCartPrice = (node) => {
-  if (!node || typeof node !== "object") return undefined;
-  if (node.type === "addToCart") {
-    const price = node.props?.price ?? node.price;
-    if (price !== undefined) return Number(price);
-  }
-  for (const value of Object.values(node)) {
-    const price = findAddToCartPrice(value);
-    if (price !== undefined) return price;
-  }
-  return undefined;
-};
-
-const parseData = (data) => {
-  if (typeof data !== "string") return data;
-  try {
-    return JSON.parse(data);
-  } catch {
-    return data;
-  }
-};
-
-const getPrice = (outputs) => {
-  const list = Object.values(outputs ?? {});
-
-  // Optional: read the price from a dedicated Grasshopper output instead
-  const priceOutputName = process.env.SHAPEDIVER_PRICE_OUTPUT;
-  if (priceOutputName) {
-    const output = list.find((o) => o.name === priceOutputName);
-    return Number(parseData(output?.content?.[0]?.data));
-  }
-
-  const appBuilder = list.find((o) => o.name === "AppBuilder");
-  return findAddToCartPrice(appBuilder?.content?.map((c) => parseData(c.data)));
-};
-
 export default async (req) => {
   if (req.method !== "POST") return json(405, { error: "Method not allowed" });
 
-  const { modelStateId } = await req.json().catch(() => ({}));
-  if (typeof modelStateId !== "string" || !modelStateId) {
-    return json(400, { error: "Missing modelStateId" });
+  const body = await req.json().catch(() => ({}));
+  const { modelStateId, imageUrl, description } = body;
+  const price = Number(body.price);
+
+  if (typeof modelStateId !== "string" || !/^[\w-]{1,100}$/.test(modelStateId)) {
+    return json(400, { error: "Missing or invalid configuration" });
+  }
+  if (!(price >= MIN_PRICE && price <= MAX_PRICE)) {
+    console.error("Price outside allowed range", { modelStateId, price });
+    return json(400, { error: "This configuration can't be ordered online, please contact us" });
   }
 
-  const config = new Configuration({ basePath: process.env.SHAPEDIVER_MODEL_VIEW_URL });
-  const sessionApi = new SessionApi(config);
-  let sessionId;
-
   try {
-    // Load the customer's saved configuration and recompute the model with it
-    const session = await sessionApi.createSessionByTicket(process.env.SHAPEDIVER_BACKEND_TICKET);
-    sessionId = session.sessionId;
-
-    const { modelState } = await new ModelStateApi(config).getModelState(modelStateId);
-    if (modelState.modelId !== session.model.id) {
-      return json(400, { error: "This configuration belongs to a different model" });
-    }
-
-    const result = await new UtilsApi(config).submitAndWaitForOutput(
-      sessionId,
-      modelState.parameters,
-      undefined,
-      true
-    );
-
-    const price = getPrice(result.outputs);
-    if (!Number.isFinite(price) || price <= 0) {
-      console.error("No valid price found in ShapeDiver outputs", price);
-      return json(500, { error: "Could not calculate the price for this configuration" });
-    }
-
     const origin = new URL(req.url).origin;
     const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
-    const metadata = { modelStateId };
+
+    const checkUrl = `${CONFIGURATOR_URL}&modelStateId=${modelStateId}`;
+    const metadata = {
+      modelStateId,
+      quotedPrice: price.toFixed(2),
+      checkConfiguration: checkUrl,
+    };
 
     const checkout = await stripe.checkout.sessions.create({
       mode: "payment",
@@ -107,8 +57,11 @@ export default async (req) => {
             unit_amount: Math.round(price * 100),
             product_data: {
               name: PRODUCT_NAME,
-              description: `Configuration ${modelStateId}`,
-              ...(modelState.imageUrl && { images: [modelState.imageUrl] }),
+              description:
+                (typeof description === "string" && description.slice(0, 300)) ||
+                `Configuration ${modelStateId}`,
+              ...(typeof imageUrl === "string" &&
+                imageUrl.startsWith("https://") && { images: [imageUrl] }),
             },
           },
         },
@@ -125,7 +78,5 @@ export default async (req) => {
   } catch (error) {
     console.error("Checkout failed", error);
     return json(500, { error: "Checkout failed, please try again" });
-  } finally {
-    if (sessionId) sessionApi.closeSession(sessionId).catch(() => {});
   }
 };

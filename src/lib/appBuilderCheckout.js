@@ -9,11 +9,11 @@ const PEER_NAME = "app";
 const RETRY_MSEC = 100;
 const GIVE_UP_MSEC = 20000;
 
-const startCheckout = async ({ modelStateId }) => {
+const startCheckout = async ({ modelStateId, price, description, modelStateImageUrl }) => {
   const res = await fetch("/.netlify/functions/checkout", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ modelStateId }),
+    body: JSON.stringify({ modelStateId, price, description, imageUrl: modelStateImageUrl }),
   });
   const body = await res.json().catch(() => ({}));
   if (!res.ok || !body.url) throw new Error(body.error || "Checkout failed, please try again");
