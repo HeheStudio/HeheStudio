@@ -10,7 +10,7 @@ const OrderSuccess = () => {
         touch about production and delivery of your shelf.
       </p>
       <Link to="/" className="btn">
-        Back to home
+        Back to the shop
       </Link>
     </div>
   );

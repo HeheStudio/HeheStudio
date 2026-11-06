@@ -1,11 +1,11 @@
 const Footer = () => {
   return (
-    <footer className="bg-white text-gray-500 py-8 px-4 mx-20 md:px-8 lg:px-16 flex flex-col md:flex-row justify-between items-start
+    <footer className="bg-white text-gray-500 py-8 px-4 md:mx-20 md:px-8 lg:px-16 flex flex-col md:flex-row justify-between items-start
       md:items-center text-sm border-t border-gray-300">
       
       {/* Company Info */}
       <div className="mb-4 text-lg  md:mb-0 text-center md:text-left">
-        <p>© Hehe Studio</p>
+        <p>© Hehe Design</p>
       </div>
 
       
@@ -15,7 +15,7 @@ const Footer = () => {
         <p>Southampton, Hampshire</p>
         <p className="mb-2">United Kingdom</p>
         <p>
-          <a href="mailto:Contact@wxyzstudio.co.uk" className="hover:underline">
+          <a href="mailto:sunny.whe.design@gmail.com" className="hover:underline">
             sunny.whe.design@gmail.com
           </a>
         </p>
