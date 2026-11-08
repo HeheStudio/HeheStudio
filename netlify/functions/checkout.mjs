@@ -7,7 +7,7 @@ import Stripe from "stripe";
 
 const PRODUCT_NAME = "HEHE Custom Shelf";
 const CONFIGURATOR_URL =
-  "https://appbuilder.shapediver.com/v1/main/latest/?slug=261025-shopify-3";
+  "https://appbuilder.shapediver.com/v1/main/latest/?slug=261025-shopify-4";
 const CURRENCY = "gbp";
 const SHIPPING_COUNTRIES = ["GB"];
 
